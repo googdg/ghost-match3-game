@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小鬼消消乐 - Little Ghost Match-3</title>
+    <meta name="description" content="小鬼消消乐 - 有趣的三消益智游戏，挑战你的策略思维">
+    
+    <!-- 社交媒体分享优化 -->
+    <meta property="og:title" content="小鬼消消乐 - Little Ghost Match-3">
+    <meta property="og:description" content="有趣的三消益智游戏，挑战你的策略思维！">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://via.placeholder.com/1200x630/667eea/ffffff?text=小鬼消消乐">
+    
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="小鬼消消乐 - Little Ghost Match-3">
+    <meta name="twitter:description" content="有趣的三消益智游戏，挑战你的策略思维！">
+    
+    <!-- PWA支持 -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="小鬼消消乐">
+    
+    <!-- 图标 -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👻</text></svg>">
+    <style>
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .game-board {
+            width: 480px;
+            height: 480px;
+            margin: 20px auto;
+            background: #f8f9fa;
+            border: 3px solid #667eea;
+            border-radius: 12px;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            gap: 2px;
+            padding: 8px;
+            position: relative;
+        }
+
+        .game-tile {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f3f4 100%);
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 2rem;
+            user-select: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-tile:hover {
+            transform: scale(1.05);
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .game-tile.selected {
+            border-color: #ffd700;
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5);
+        }
+
+        .game-tile.matched {
+            animation: matchPulse 0.5s ease-in-out;
+        }
+
+        @keyframes matchPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); background: #ffeb3b; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .game-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .game-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .game-btn:active {
+            transform: translateY(0);
+        }
+
+        .game-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .game-message {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .game-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .game-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .game-message.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .instructions {
+            margin-top: 30px;
+            text-align: left;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .instructions h3 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .instructions ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .instructions li {
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .instructions li:last-child {
+            border-bottom: none;
+        }
+
+        .ghost-colors {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .ghost-color {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            border: 2px solid #ddd;
+            transition: transform 0.2s ease;
+        }
+
+        .ghost-color:hover {
+            transform: scale(1.1);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .game-title {
+                font-size: 2rem;
+            }
+
+            .game-board {
+                width: 90vw;
+                height: 90vw;
+                max-width: 400px;
+                max-height: 400px;
+            }
+
+            .game-tile {
+                font-size: 1.5rem;
+            }
+
+            .game-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .game-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .game-btn {
+                width: 200px;
+            }
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="game-title">小鬼消消乐</h1>
+        <p class="game-subtitle">Little Ghost Match-3 Puzzle Game</p>
+
+        <!-- 游戏信息显示 -->
+        <div class="game-info">
+            <div class="info-item">
+                <div class="info-label">分数</div>
+                <div class="info-value" id="score">0</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">关卡</div>
+                <div class="info-value" id="level">1</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">移动</div>
+                <div class="info-value" id="moves">30</div>
+            </div>
+        </div>
+
+        <!-- 游戏控制按钮 -->
+        <div class="game-controls">
+            <button class="game-btn" id="start-btn" onclick="startGame()">开始游戏</button>
+            <button class="game-btn" id="pause-btn" onclick="pauseGame()" disabled>暂停</button>
+            <button class="game-btn" id="restart-btn" onclick="restartGame()" disabled>重新开始</button>
+            <button class="game-btn" id="hint-btn" onclick="showHint()" disabled>提示</button>
+        </div>
+
+        <!-- 游戏消息 -->
+        <div class="game-message" id="game-message"></div>
+
+        <!-- 游戏网格 -->
+        <div class="game-board" id="game-board">
+            <!-- 游戏瓦片将在这里生成 -->
+        </div>
+
+        <!-- 小鬼颜色说明 -->
+        <div class="ghost-colors">
+            <div class="ghost-color" style="background: #FF6B6B;">👻</div>
+            <div class="ghost-color" style="background: #4ECDC4;">🎃</div>
+            <div class="ghost-color" style="background: #45B7D1;">👹</div>
+            <div class="ghost-color" style="background: #96CEB4;">👺</div>
+            <div class="ghost-color" style="background: #FFEAA7;">🤖</div>
+            <div class="ghost-color" style="background: #DDA0DD;">👽</div>
+        </div>
+
+        <!-- 游戏说明 -->
+        <div class="instructions">
+            <h3>游戏说明</h3>
+            <ul>
+                <li>🎯 <strong>目标</strong>: 通过交换相邻的小鬼，创造三个或更多相同小鬼的连线</li>
+                <li>🖱️ <strong>操作</strong>: 点击一个小鬼，然后点击相邻的小鬼来交换位置</li>
+                <li>📱 <strong>移动端</strong>: 可以通过滑动手势来交换小鬼</li>
+                <li>⭐ <strong>特殊道具</strong>: 匹配4个或更多小鬼可以创造特殊道具</li>
+                <li>🏆 <strong>得分</strong>: 匹配更多小鬼获得更高分数，完成关卡目标</li>
+            </ul>
+        </div>
+
+        <!-- 分享区域 -->
+        <div class="share-section" style="margin-top: 30px; text-align: center; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+            <h3 style="color: #333; margin-bottom: 15px;">🎮 分享给朋友们</h3>
+            <p style="color: #666; margin-bottom: 15px;">觉得好玩？分享给朋友一起挑战吧！</p>
+            <div class="share-buttons" style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                <button class="game-btn" onclick="shareGame('copy')" style="font-size: 0.9rem; padding: 8px 16px;">📋 复制链接</button>
+                <button class="game-btn" onclick="shareGame('wechat')" style="font-size: 0.9rem; padding: 8px 16px;">💬 微信分享</button>
+                <button class="game-btn" onclick="shareGame('weibo')" style="font-size: 0.9rem; padding: 8px 16px;">🐦 微博分享</button>
+            </div>
+        </div>
+
+        <!-- 版权信息 -->
+        <div style="margin-top: 30px; text-align: center; color: #666; font-size: 0.9rem;">
+            <p>🎨 由 AI 助手开发 | 💝 免费开源游戏</p>
+            <p>⭐ 如果喜欢，请分享给更多朋友！</p>
+        </div>
+    </div>
+
+    <script>
+        // 简化版游戏逻辑
+        class SimpleGhostMatch3 {
+            constructor() {
+                this.gridSize = 8;
+                this.ghostTypes = 6;
+                this.grid = [];
+                this.score = 0;
+                this.level = 1;
+                this.moves = 30;
+                this.selectedTile = null;
+                this.isGameActive = false;
+                this.gameBoard = document.getElementById('game-board');
+                
+                this.ghostEmojis = ['👻', '🎃', '👹', '👺', '🤖', '👽'];
+                this.ghostColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'];
+                
+                this.initializeGrid();
+            }
+            
+            initializeGrid() {
+                this.grid = [];
+                for (let y = 0; y < this.gridSize; y++) {
+                    this.grid[y] = [];
+                    for (let x = 0; x < this.gridSize; x++) {
+                        this.grid[y][x] = this.createRandomGhost();
+                    }
+                }
+                
+                // 确保初始状态没有匹配
+                this.removeInitialMatches();
+                this.renderGrid();
+            }
+            
+            createRandomGhost() {
+                const type = Math.floor(Math.random() * this.ghostTypes);
+                return {
+                    type: type,
+                    emoji: this.ghostEmojis[type],
+                    color: this.ghostColors[type],
+                    id: Math.random().toString(36).substr(2, 9)
+                };
+            }
+            
+            removeInitialMatches() {
+                let hasMatches = true;
+                while (hasMatches) {
+                    const matches = this.findMatches();
+                    if (matches.length === 0) {
+                        hasMatches = false;
+                    } else {
+                        // 重新生成匹配的瓦片
+                        matches.forEach(match => {
+                            match.forEach(pos => {
+                                this.grid[pos.y][pos.x] = this.createRandomGhost();
+                            });
+                        });
+                    }
+                }
+            }
+            
+            renderGrid() {
+                this.gameBoard.innerHTML = '';
+                
+                for (let y = 0; y < this.gridSize; y++) {
+                    for (let x = 0; x < this.gridSize; x++) {
+                        const tile = document.createElement('div');
+                        tile.className = 'game-tile';
+                        tile.dataset.x = x;
+                        tile.dataset.y = y;
+                        tile.textContent = this.grid[y][x].emoji;
+                        tile.style.backgroundColor = this.grid[y][x].color + '20';
+                        tile.addEventListener('click', () => this.handleTileClick(x, y));
+                        
+                        this.gameBoard.appendChild(tile);
+                    }
+                }
+            }
+            
+            handleTileClick(x, y) {
+                if (!this.isGameActive) return;
+                
+                const tile = this.gameBoard.children[y * this.gridSize + x];
+                
+                if (this.selectedTile === null) {
+                    // 选择瓦片
+                    this.selectedTile = { x, y };
+                    tile.classList.add('selected');
+                } else if (this.selectedTile.x === x && this.selectedTile.y === y) {
+                    // 取消选择
+                    tile.classList.remove('selected');
+                    this.selectedTile = null;
+                } else {
+                    // 尝试交换
+                    this.attemptSwap(this.selectedTile, { x, y });
+                }
+            }
+            
+            attemptSwap(pos1, pos2) {
+                // 检查是否相邻
+                const dx = Math.abs(pos1.x - pos2.x);
+                const dy = Math.abs(pos1.y - pos2.y);
+                
+                if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
+                    // 执行交换
+                    this.swapTiles(pos1, pos2);
+                    
+                    // 检查是否有匹配
+                    const matches = this.findMatches();
+                    
+                    if (matches.length > 0) {
+                        // 有效移动
+                        this.moves--;
+                        this.updateUI();
+                        this.processMatches(matches);
+                    } else {
+                        // 无效移动，恢复
+                        this.swapTiles(pos1, pos2);
+                        this.showMessage('无效移动！', 'warning');
+                    }
+                } else {
+                    this.showMessage('只能交换相邻的小鬼！', 'warning');
+                }
+                
+                // 清除选择
+                this.clearSelection();
+            }
+            
+            swapTiles(pos1, pos2) {
+                const temp = this.grid[pos1.y][pos1.x];
+                this.grid[pos1.y][pos1.x] = this.grid[pos2.y][pos2.x];
+                this.grid[pos2.y][pos2.x] = temp;
+                this.renderGrid();
+            }
+            
+            findMatches() {
+                const matches = [];
+                
+                // 查找水平匹配
+                for (let y = 0; y < this.gridSize; y++) {
+                    let count = 1;
+                    let currentType = this.grid[y][0].type;
+                    
+                    for (let x = 1; x < this.gridSize; x++) {
+                        if (this.grid[y][x].type === currentType) {
+                            count++;
+                        } else {
+                            if (count >= 3) {
+                                const match = [];
+                                for (let i = x - count; i < x; i++) {
+                                    match.push({ x: i, y: y });
+                                }
+                                matches.push(match);
+                            }
+                            count = 1;
+                            currentType = this.grid[y][x].type;
+                        }
+                    }
+                    
+                    if (count >= 3) {
+                        const match = [];
+                        for (let i = this.gridSize - count; i < this.gridSize; i++) {
+                            match.push({ x: i, y: y });
+                        }
+                        matches.push(match);
+                    }
+                }
+                
+                // 查找垂直匹配
+                for (let x = 0; x < this.gridSize; x++) {
+                    let count = 1;
+                    let currentType = this.grid[0][x].type;
+                    
+                    for (let y = 1; y < this.gridSize; y++) {
+                        if (this.grid[y][x].type === currentType) {
+                            count++;
+                        } else {
+                            if (count >= 3) {
+                                const match = [];
+                                for (let i = y - count; i < y; i++) {
+                                    match.push({ x: x, y: i });
+                                }
+                                matches.push(match);
+                            }
+                            count = 1;
+                            currentType = this.grid[y][x].type;
+                        }
+                    }
+                    
+                    if (count >= 3) {
+                        const match = [];
+                        for (let i = this.gridSize - count; i < this.gridSize; i++) {
+                            match.push({ x: x, y: i });
+                        }
+                        matches.push(match);
+                    }
+                }
+                
+                return matches;
+            }
+            
+            processMatches(matches) {
+                let totalScore = 0;
+                
+                matches.forEach(match => {
+                    totalScore += match.length * 10;
+                    
+                    // 标记匹配的瓦片
+                    match.forEach(pos => {
+                        const tileIndex = pos.y * this.gridSize + pos.x;
+                        const tile = this.gameBoard.children[tileIndex];
+                        tile.classList.add('matched');
+                    });
+                });
+                
+                this.score += totalScore;
+                this.showMessage(`太棒了！获得 ${totalScore} 分！`, 'success');
+                
+                // 延迟移除匹配的瓦片并应用重力
+                setTimeout(() => {
+                    this.removeMatches(matches);
+                    this.applyGravity();
+                    this.fillEmptySpaces();
+                    this.renderGrid();
+                    
+                    // 检查连锁反应
+                    setTimeout(() => {
+                        const newMatches = this.findMatches();
+                        if (newMatches.length > 0) {
+                            this.processMatches(newMatches);
+                        } else {
+                            this.checkGameEnd();
+                        }
+                    }, 300);
+                }, 500);
+                
+                this.updateUI();
+            }
+            
+            removeMatches(matches) {
+                matches.forEach(match => {
+                    match.forEach(pos => {
+                        this.grid[pos.y][pos.x] = null;
+                    });
+                });
+            }
+            
+            applyGravity() {
+                for (let x = 0; x < this.gridSize; x++) {
+                    const column = [];
+                    
+                    // 收集非空瓦片
+                    for (let y = this.gridSize - 1; y >= 0; y--) {
+                        if (this.grid[y][x] !== null) {
+                            column.push(this.grid[y][x]);
+                        }
+                    }
+                    
+                    // 重新填充列
+                    for (let y = 0; y < this.gridSize; y++) {
+                        this.grid[y][x] = null;
+                    }
+                    
+                    for (let i = 0; i < column.length; i++) {
+                        this.grid[this.gridSize - 1 - i][x] = column[i];
+                    }
+                }
+            }
+            
+            fillEmptySpaces() {
+                for (let y = 0; y < this.gridSize; y++) {
+                    for (let x = 0; x < this.gridSize; x++) {
+                        if (this.grid[y][x] === null) {
+                            this.grid[y][x] = this.createRandomGhost();
+                        }
+                    }
+                }
+            }
+            
+            clearSelection() {
+                if (this.selectedTile) {
+                    const tileIndex = this.selectedTile.y * this.gridSize + this.selectedTile.x;
+                    this.gameBoard.children[tileIndex].classList.remove('selected');
+                    this.selectedTile = null;
+                }
+            }
+            
+            updateUI() {
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('level').textContent = this.level;
+                document.getElementById('moves').textContent = this.moves;
+            }
+            
+            showMessage(text, type = 'info') {
+                const messageEl = document.getElementById('game-message');
+                messageEl.textContent = text;
+                messageEl.className = `game-message ${type}`;
+                messageEl.style.display = 'block';
+                
+                setTimeout(() => {
+                    messageEl.style.display = 'none';
+                }, 3000);
+            }
+            
+            checkGameEnd() {
+                if (this.moves <= 0) {
+                    this.endGame();
+                } else if (this.score >= this.level * 1000) {
+                    this.nextLevel();
+                }
+            }
+            
+            nextLevel() {
+                this.level++;
+                this.moves += 20;
+                this.showMessage(`恭喜！进入第 ${this.level} 关！`, 'success');
+                this.updateUI();
+            }
+            
+            endGame() {
+                this.isGameActive = false;
+                this.showMessage(`游戏结束！最终分数: ${this.score}`, 'info');
+                
+                document.getElementById('start-btn').disabled = false;
+                document.getElementById('pause-btn').disabled = true;
+                document.getElementById('restart-btn').disabled = true;
+                document.getElementById('hint-btn').disabled = true;
+            }
+            
+            start() {
+                this.isGameActive = true;
+                this.score = 0;
+                this.level = 1;
+                this.moves = 30;
+                this.initializeGrid();
+                this.updateUI();
+                this.showMessage('游戏开始！祝你好运！', 'success');
+                
+                document.getElementById('start-btn').disabled = true;
+                document.getElementById('pause-btn').disabled = false;
+                document.getElementById('restart-btn').disabled = false;
+                document.getElementById('hint-btn').disabled = false;
+            }
+            
+            pause() {
+                this.isGameActive = !this.isGameActive;
+                const pauseBtn = document.getElementById('pause-btn');
+                pauseBtn.textContent = this.isGameActive ? '暂停' : '继续';
+                
+                this.showMessage(this.isGameActive ? '游戏继续' : '游戏暂停', 'info');
+            }
+            
+            restart() {
+                this.start();
+            }
+            
+            hint() {
+                // 简单的提示：找到第一个可能的移动
+                for (let y = 0; y < this.gridSize; y++) {
+                    for (let x = 0; x < this.gridSize; x++) {
+                        // 检查右侧交换
+                        if (x < this.gridSize - 1) {
+                            this.swapTiles({ x, y }, { x: x + 1, y });
+                            const matches = this.findMatches();
+                            this.swapTiles({ x, y }, { x: x + 1, y }); // 恢复
+                            
+                            if (matches.length > 0) {
+                                this.showMessage(`提示：尝试交换 (${x+1},${y+1}) 和 (${x+2},${y+1}) 位置的小鬼`, 'info');
+                                return;
+                            }
+                        }
+                        
+                        // 检查下方交换
+                        if (y < this.gridSize - 1) {
+                            this.swapTiles({ x, y }, { x, y: y + 1 });
+                            const matches = this.findMatches();
+                            this.swapTiles({ x, y }, { x, y: y + 1 }); // 恢复
+                            
+                            if (matches.length > 0) {
+                                this.showMessage(`提示：尝试交换 (${x+1},${y+1}) 和 (${x+1},${y+2}) 位置的小鬼`, 'info');
+                                return;
+                            }
+                        }
+                    }
+                }
+                
+                this.showMessage('没有找到明显的移动，试试其他组合！', 'warning');
+            }
+        }
+        
+        // 全局游戏实例
+        let game = null;
+        
+        // 游戏控制函数
+        function startGame() {
+            if (!game) {
+                game = new SimpleGhostMatch3();
+            }
+            game.start();
+        }
+        
+        function pauseGame() {
+            if (game) {
+                game.pause();
+            }
+        }
+        
+        function restartGame() {
+            if (game) {
+                game.restart();
+            }
+        }
+        
+        function showHint() {
+            if (game) {
+                game.hint();
+            }
+        }
+        
+        // 分享功能
+        function shareGame(platform) {
+            const url = window.location.href;
+            const title = '小鬼消消乐 - 超好玩的三消益智游戏！';
+            const description = '快来挑战这个有趣的小鬼消消乐游戏，看看你能得多少分！';
+            
+            switch(platform) {
+                case 'copy':
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(url).then(() => {
+                            alert('🎉 链接已复制到剪贴板！\n快去分享给朋友们吧！');
+                        }).catch(() => {
+                            fallbackCopyText(url);
+                        });
+                    } else {
+                        fallbackCopyText(url);
+                    }
+                    break;
+                    
+                case 'wechat':
+                    // 微信分享提示
+                    alert('📱 微信分享提示：\n\n1. 复制这个链接：' + url + '\n2. 在微信中粘贴分享给朋友\n3. 或者截图二维码分享');
+                    break;
+                    
+                case 'weibo':
+                    const weiboUrl = `https://service.weibo.com/share/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title + ' ' + description)}`;
+                    window.open(weiboUrl, '_blank');
+                    break;
+            }
+        }
+        
+        // 备用复制方法
+        function fallbackCopyText(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                alert('🎉 链接已复制到剪贴板！');
+            } catch (err) {
+                alert('📋 请手动复制链接：\n' + text);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('小鬼消消乐游戏已加载完成！');
+            
+            // 添加键盘快捷键
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'r' || e.key === 'R') {
+                    if (game && game.isGameActive) {
+                        restartGame();
+                    }
+                } else if (e.key === 'h' || e.key === 'H') {
+                    if (game && game.isGameActive) {
+                        showHint();
+                    }
+                } else if (e.key === ' ') {
+                    e.preventDefault();
+                    if (game && game.isGameActive) {
+                        pauseGame();
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
